@@ -104,7 +104,7 @@ int CompareMatrix(ccsmatrix mtx1, ccsmatrix mtx2, double &diff)
   return 0; // Совпал размер
 }
 
-// Принимает 2 квадратных матрицы в формате CRS (3 массива, индексация с нуля)
+// Принимает 2 квадратных матрицы в формате CCS (3 массива, индексация с нуля)
 // Возвращает max|Cij|, где C = A - B
 // Для сравнения использует функцию из MKL
 // Возвращает признак успешности операции: 0 - ОК, 1 - не совпадают размеры (N)
@@ -115,6 +115,8 @@ int SparseDiff(ccsmatrix A, ccsmatrix B, double &diff)
 
   int n = A.size;
 
+  // Используется функция для вычитания CRS, но результат будет аналогичным и для 
+  // формата CCS
   // Будем вычислять C = A - B, используя MKL
   // Структуры данных в стиле MKL
   double *c = 0; // Значения
@@ -204,8 +206,8 @@ int SparseDiff(ccsmatrix A, ccsmatrix B, double &diff)
   return 0;
 }
 
-// Принимает 2 квадратных матрицы в формате CRS (3 массива, индексация с нуля)
-// Возвращает C = A * B, C - в формате CRS (3 массива, индексация с нуля)
+// Принимает 2 квадратных матрицы в формате CCS (3 массива, индексация с нуля)
+// Возвращает C = A * B, C - в формате CCS (3 массива, индексация с нуля)
 //                       Память для C в начале считается не выделенной
 // Возвращает признак успешности операции: 0 - ОК, 1 - не совпадают размеры (N)
 // Возвращает время работы
@@ -265,6 +267,9 @@ int SparseMKLMult(ccsmatrix A, ccsmatrix B, ccsmatrix &C, double &time)
   request = 1;
   C.value = 0;
   C.row = 0;
+
+// Используется функция для вычисления произведения в формате CRS, но 
+// результат будет аналогичным
   mkl_dcsrmultcsr(&trans, &request, &sort, &n, &n, &n, A.value, A.row, 
 	  A.colindex, B.value, B.row, B.colindex, C.value, C.row,
 	  C.colindex, &nzmax, &info);
@@ -307,8 +312,8 @@ double next()
   return ((double)rand() / (double)RAND_MAX);
 }
 
-// Генерирует квадратную матрицу в формате CRS (3 массива, индексация с нуля)
-// В каждой строке cntInRow ненулевых элементов
+// Генерирует квадратную матрицу в формате CCS (3 массива, индексация с нуля)
+// В каждом столбце cntInRow ненулевых элементов
 void GenerateRegularCCS(int seed, int N, int cntInRow, ccsmatrix& mtx)
 {
   int i, j, k, f, tmp, notNull, c;
@@ -336,7 +341,7 @@ void GenerateRegularCCS(int seed, int N, int cntInRow, ccsmatrix& mtx)
             f = 1;
       } while (f == 1);
     }
-    // Сортируем номера столцов в строке i
+    // Сортируем номера строк в столбце i
     for (j = 0; j < cntInRow - 1; j++)
       for (k = 0; k < cntInRow - 1; k++)
         if (mtx.row[i * cntInRow + k] > mtx.row[i * cntInRow + k + 1])
@@ -351,7 +356,7 @@ void GenerateRegularCCS(int seed, int N, int cntInRow, ccsmatrix& mtx)
   for (i = 0; i < cntInRow * N; i++)
     mtx.value[i] = next() * MAX_VAL;
 
-  // Заполняем массив индексов строк
+  // Заполняем массив индексов столбцов
   c = 0;
   for (i = 0; i <= N; i++)
   {
@@ -360,8 +365,8 @@ void GenerateRegularCCS(int seed, int N, int cntInRow, ccsmatrix& mtx)
   }
 }
 
-// Генерирует квадратную матрицу в формате CRS (3 массива, индексация с нуля)
-// Число ненулевых элементов в строках растет от 1 до cntInRow
+// Генерирует квадратную матрицу в формате CСS (3 массива, индексация с нуля)
+// Число ненулевых элементов в столбцах растет от 1 до cntInRow
 // Закон роста - кубическая парабола
 void GenerateSpecialCCS(int seed, int N, int cntInRow, ccsmatrix& mtx)
 {
